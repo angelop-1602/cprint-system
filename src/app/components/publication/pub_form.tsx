@@ -1,5 +1,6 @@
-// src/components/rec/RecForm.tsx
+// src/components/publication/PublicationForm.tsx
 'use client';
+
 import React, { useState, useEffect } from 'react';
 import {
   Box,
@@ -19,7 +20,7 @@ import StyledLink from '../reusable/StyledLink'; // Custom styled link component
 import { Routes } from '@/app/route/routes';
 import { onAuthStateChanged } from 'firebase/auth'; // Importing the auth state listener
 
-const RecForm = () => {
+const PublicationForm = () => {
   const router = useRouter();
   const [researchTitle, setResearchTitle] = useState('');
   const [researcherName, setResearcherName] = useState('');
@@ -47,10 +48,12 @@ const RecForm = () => {
     // Listen for user authentication state
     const unsubscribe = onAuthStateChanged(auth, (user) => {
       if (user) {
+        console.log('User authenticated:', user); // Debugging line
         setUserEmail(user.email || ''); // Set user email
         setUserName(user.displayName || ''); // Set user name (if available)
         setResearcherName(user.displayName || ''); // Optionally set researcherName to user's display name
       } else {
+        console.log('No user is authenticated'); // Debugging line
         setUserEmail('');
         setUserName('');
       }
@@ -62,24 +65,34 @@ const RecForm = () => {
   useEffect(() => {
     const fetchSubmission = async () => {
       const userId = auth.currentUser?.uid; // Get the current user's UID
-      if (!userId) return; // Ensure user is authenticated
+      console.log('Current User ID:', userId); // Debugging line
 
-      const docRef = doc(db, 'research_submissions', userId); // Use user's UID
-      const docSnap = await getDoc(docRef);
+      if (!userId) {
+        console.log('User is not authenticated');
+        return; // Ensure user is authenticated
+      }
 
-      if (docSnap.exists()) {
-        const data = docSnap.data();
-        setResearchTitle(data.researchTitle || '');
-        setCourseProgram(data.courseProgram || '');
-        setAdviserName(data.adviserName || '');
-      } else {
-        console.log('No such document!');
+      const docRef = doc(db, 'publication_submissions', userId); // Use user's UID
+      console.log('Document Reference:', docRef); // Debugging line
+
+      try {
+        const docSnap = await getDoc(docRef);
+        if (docSnap.exists()) {
+          const data = docSnap.data();
+          console.log('Fetched data:', data); // Debugging line
+          setResearchTitle(data.researchTitle || '');
+          setCourseProgram(data.courseProgram || '');
+          setAdviserName(data.adviserName || '');
+        } else {
+          console.log('No such document!'); // This will log if the document doesn't exist
+        }
+      } catch (error) {
+        console.error('Error fetching document:', error); // Catch any errors while fetching
       }
     };
 
     fetchSubmission();
   }, [auth.currentUser]);
-
 
   const handleFileChange = (key: string) => (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0] || null;
@@ -98,7 +111,7 @@ const RecForm = () => {
     }
 
     try {
-      const docRef = doc(db, 'research_submissions', userId); // Use user's UID as the document ID
+      const docRef = doc(db, 'publication_submissions', userId); // Use user's UID as the document ID
       await setDoc(docRef, {
         researchTitle,
         researcherName, // Use name from state
@@ -110,7 +123,7 @@ const RecForm = () => {
       // Upload files as before
       const uploadPromises = Object.entries(files).map(async ([key, file]) => {
         if (file) {
-          const fileRef = ref(storage, `research_files/${userId}/${key}`); // Use user's UID in the path
+          const fileRef = ref(storage, `publication_files/${userId}/${key}`); // Use user's UID in the path
           await uploadBytes(fileRef, file);
         }
       });
@@ -147,7 +160,7 @@ const RecForm = () => {
       }}
     >
       <Typography variant="h5" gutterBottom>
-        REC Submission
+        Publication Submission
       </Typography>
       <Divider sx={{ my: 2 }} />
       <Typography variant="subtitle1" gutterBottom sx={{ mb: 2 }}>
@@ -213,4 +226,4 @@ const RecForm = () => {
   );
 };
 
-export default RecForm;
+export default PublicationForm;

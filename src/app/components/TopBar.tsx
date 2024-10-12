@@ -1,9 +1,9 @@
-// src/app/components/TopBar.tsx
 "use client"; // Required for client-side rendering
 
 import React from 'react';
 import { AppBar, Toolbar, IconButton, useMediaQuery, Typography } from '@mui/material';
 import MenuIcon from '@mui/icons-material/Menu';
+import SignOutButton from './SignoutButton';
 
 interface TopBarProps {
   onMenuClick: () => void; // Callback for menu button click
@@ -22,7 +22,6 @@ const TopBar: React.FC<TopBarProps> = ({ onMenuClick }) => {
       }}
     >
       <Toolbar>
-     
         {isMobile && ( // Render the menu button only if in mobile view
           <IconButton
             edge="start"
@@ -32,11 +31,15 @@ const TopBar: React.FC<TopBarProps> = ({ onMenuClick }) => {
           >
             <MenuIcon />
           </IconButton>
-        )} <Typography variant="h6" sx={{ padding: '16px', fontWeight: 'bold' }}>
-        CPRINT System
-      </Typography>
-        <span style={{ flexGrow: 1 }} /> 
-        
+        )}
+
+        <Typography variant="h6" sx={{ padding: '16px', fontWeight: 'bold' }}>
+          CPRINT System
+        </Typography>
+
+        <span style={{ flexGrow: 1 }} /> {/* This ensures the space between title and Sign Out */}
+
+        <SignOutButton /> {/* Add the SignOutButton component */}
       </Toolbar>
     </AppBar>
   );
