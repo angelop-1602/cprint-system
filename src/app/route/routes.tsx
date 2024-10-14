@@ -6,5 +6,6 @@ export const Routes = {
     REC: '/pages/rec',
     REC_FORM: '/pages/rec/rec_form',
     PUB_FORM:'/pages/publication/pub_form',
+    REC_EDIT: '/pages/rec/rec_edit', 
   };
   

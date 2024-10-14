@@ -1,4 +1,3 @@
-// src/components/rec/RecForm.tsx
 'use client';
 import React, { useState, useEffect } from 'react';
 import {
@@ -11,7 +10,7 @@ import {
 } from '@mui/material';
 import FileInput from '../reusable/FileInput'; // Reusable file input component
 import { auth, db, storage } from '@/app/firebase/Config'; // Ensure this is your correct Firebase config path
-import { doc, getDoc, setDoc } from 'firebase/firestore';
+import { doc, setDoc } from 'firebase/firestore';
 import { ref, uploadBytes } from 'firebase/storage';
 import { useRouter } from 'next/navigation';
 import StyledInput from '../reusable/StyledInput'; // Custom styled input component
@@ -59,28 +58,6 @@ const RecForm = () => {
     return () => unsubscribe(); // Clean up the subscription
   }, []);
 
-  useEffect(() => {
-    const fetchSubmission = async () => {
-      const userId = auth.currentUser?.uid; // Get the current user's UID
-      if (!userId) return; // Ensure user is authenticated
-
-      const docRef = doc(db, 'research_submissions', userId); // Use user's UID
-      const docSnap = await getDoc(docRef);
-
-      if (docSnap.exists()) {
-        const data = docSnap.data();
-        setResearchTitle(data.researchTitle || '');
-        setCourseProgram(data.courseProgram || '');
-        setAdviserName(data.adviserName || '');
-      } else {
-        console.log('No such document!');
-      }
-    };
-
-    fetchSubmission();
-  }, [auth.currentUser]);
-
-
   const handleFileChange = (key: string) => (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0] || null;
     setFiles((prev) => ({ ...prev, [key]: file }));
@@ -88,7 +65,7 @@ const RecForm = () => {
 
   const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
-
+  
     const userId = auth.currentUser?.uid; // Get the current user's UID
     if (!userId) {
       setSnackbarMessage('User is not authenticated.');
@@ -96,7 +73,7 @@ const RecForm = () => {
       setSnackbarOpen(true);
       return;
     }
-
+  
     try {
       const docRef = doc(db, 'research_submissions', userId); // Use user's UID as the document ID
       await setDoc(docRef, {
@@ -106,17 +83,33 @@ const RecForm = () => {
         courseProgram,
         adviserName,
       }, { merge: true });
-
-      // Upload files as before
+  
+      // Get current date in YYYY-MM-DD format
+      const currentDate = new Date().toISOString().split('T')[0]; 
+  
+      // Upload files with the label, user name, and current date
       const uploadPromises = Object.entries(files).map(async ([key, file]) => {
         if (file) {
-          const fileRef = ref(storage, `research_files/${userId}/${key}`); // Use user's UID in the path
+          const fileLabel = {
+            protocolFile: "Protocol Review Application",
+            endorsementFile: "Endorsement Letter",
+            minutesFile: "Minutes of the Proposal Defense",
+            proposalFile: "Research Proposal",
+            consentFile: "Informed Consent",
+            technicalFile: "Technical Review Approval",
+            questionnaireFile: "Questionnaire",
+            cvFile: "Curriculum Vitae",
+            receiptFile: "Proof of Payment"
+          }[key];
+  
+          const fileName = `${fileLabel}_${userName}_${currentDate}`; // Generate the custom file name
+          const fileRef = ref(storage, `research_files/${userId}/${fileName}`); // Save file with custom name
           await uploadBytes(fileRef, file);
         }
       });
-
+  
       await Promise.all(uploadPromises); // Wait for all uploads to complete
-
+  
       setSnackbarMessage('Form submitted successfully!');
       setSnackbarSeverity('success');
       router.push(Routes.REC); // Navigate to another page on success
@@ -125,9 +118,10 @@ const RecForm = () => {
       setSnackbarMessage('Failed to submit the form.');
       setSnackbarSeverity('error');
     }
-
+  
     setSnackbarOpen(true);
   };
+  
 
   const handleSnackbarClose = () => setSnackbarOpen(false);
 

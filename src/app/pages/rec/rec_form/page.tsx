@@ -5,8 +5,8 @@ import RecForm from '@/app/components/rec/rec_form';
 import React from 'react';
 
 
-const RecSubmition= () => {
+const Submition= () => {
   return <RecForm />;
 };
 
-export default RecSubmition;
+export default Submition;

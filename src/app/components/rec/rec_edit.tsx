@@ -1,6 +1,4 @@
-// src/components/publication/PublicationForm.tsx
 'use client';
-
 import React, { useState, useEffect } from 'react';
 import {
   Box,
@@ -14,14 +12,17 @@ import FileInput from '../reusable/FileInput'; // Reusable file input component
 import { auth, db, storage } from '@/app/firebase/Config'; // Ensure this is your correct Firebase config path
 import { doc, getDoc, setDoc } from 'firebase/firestore';
 import { ref, uploadBytes } from 'firebase/storage';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import StyledInput from '../reusable/StyledInput'; // Custom styled input component
 import StyledLink from '../reusable/StyledLink'; // Custom styled link component
 import { Routes } from '@/app/route/routes';
 import { onAuthStateChanged } from 'firebase/auth'; // Importing the auth state listener
 
-const PublicationForm = () => {
+const RecEdit = () => {
   const router = useRouter();
+  const searchParams = useSearchParams(); // To get query parameters like submission ID
+  const submissionId = searchParams.get('id'); // Assume the submission id is passed as a query param 'id'
+
   const [researchTitle, setResearchTitle] = useState('');
   const [researcherName, setResearcherName] = useState('');
   const [courseProgram, setCourseProgram] = useState('');
@@ -48,12 +49,10 @@ const PublicationForm = () => {
     // Listen for user authentication state
     const unsubscribe = onAuthStateChanged(auth, (user) => {
       if (user) {
-        console.log('User authenticated:', user); // Debugging line
         setUserEmail(user.email || ''); // Set user email
         setUserName(user.displayName || ''); // Set user name (if available)
         setResearcherName(user.displayName || ''); // Optionally set researcherName to user's display name
       } else {
-        console.log('No user is authenticated'); // Debugging line
         setUserEmail('');
         setUserName('');
       }
@@ -63,36 +62,26 @@ const PublicationForm = () => {
   }, []);
 
   useEffect(() => {
+    // Fetch submission data for editing if an id is provided
     const fetchSubmission = async () => {
-      const userId = auth.currentUser?.uid; // Get the current user's UID
-      console.log('Current User ID:', userId); // Debugging line
+      if (!submissionId) return;
 
-      if (!userId) {
-        console.log('User is not authenticated');
-        return; // Ensure user is authenticated
-      }
+      const docRef = doc(db, 'research_submissions', submissionId); // Fetch by submission ID
+      const docSnap = await getDoc(docRef);
 
-      const docRef = doc(db, 'publication_submissions', userId); // Use user's UID
-      console.log('Document Reference:', docRef); // Debugging line
-
-      try {
-        const docSnap = await getDoc(docRef);
-        if (docSnap.exists()) {
-          const data = docSnap.data();
-          console.log('Fetched data:', data); // Debugging line
-          setResearchTitle(data.researchTitle || '');
-          setCourseProgram(data.courseProgram || '');
-          setAdviserName(data.adviserName || '');
-        } else {
-          console.log('No such document!'); // This will log if the document doesn't exist
-        }
-      } catch (error) {
-        console.error('Error fetching document:', error); // Catch any errors while fetching
+      if (docSnap.exists()) {
+        const data = docSnap.data();
+        setResearchTitle(data.researchTitle || '');
+        setResearcherName(data.researcherName || '');
+        setCourseProgram(data.courseProgram || '');
+        setAdviserName(data.adviserName || '');
+      } else {
+        console.log('No such document!');
       }
     };
 
     fetchSubmission();
-  }, [auth.currentUser]);
+  }, [submissionId]);
 
   const handleFileChange = (key: string) => (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0] || null;
@@ -102,20 +91,19 @@ const PublicationForm = () => {
   const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
 
-    const userId = auth.currentUser?.uid; // Get the current user's UID
-    if (!userId) {
-      setSnackbarMessage('User is not authenticated.');
+    if (!submissionId) {
+      setSnackbarMessage('No submission ID found.');
       setSnackbarSeverity('error');
       setSnackbarOpen(true);
       return;
     }
 
     try {
-      const docRef = doc(db, 'publication_submissions', userId); // Use user's UID as the document ID
+      const docRef = doc(db, 'research_submissions', submissionId); // Use submission ID for the document
       await setDoc(docRef, {
         researchTitle,
-        researcherName, // Use name from state
-        userEmail,      // Include user email in submission
+        researcherName,
+        userEmail, // Include user email in submission
         courseProgram,
         adviserName,
       }, { merge: true });
@@ -123,19 +111,19 @@ const PublicationForm = () => {
       // Upload files as before
       const uploadPromises = Object.entries(files).map(async ([key, file]) => {
         if (file) {
-          const fileRef = ref(storage, `publication_files/${userId}/${key}`); // Use user's UID in the path
+          const fileRef = ref(storage, `research_files/${submissionId}/${key}`); // Use submission ID in the path
           await uploadBytes(fileRef, file);
         }
       });
 
       await Promise.all(uploadPromises); // Wait for all uploads to complete
 
-      setSnackbarMessage('Form submitted successfully!');
+      setSnackbarMessage('Form updated successfully!');
       setSnackbarSeverity('success');
       router.push(Routes.REC); // Navigate to another page on success
     } catch (error) {
-      console.error('Error submitting form: ', error);
-      setSnackbarMessage('Failed to submit the form.');
+      console.error('Error updating form: ', error);
+      setSnackbarMessage('Failed to update the form.');
       setSnackbarSeverity('error');
     }
 
@@ -160,11 +148,11 @@ const PublicationForm = () => {
       }}
     >
       <Typography variant="h5" gutterBottom>
-        Publication Submission
+        Edit REC Submission
       </Typography>
       <Divider sx={{ my: 2 }} />
       <Typography variant="subtitle1" gutterBottom sx={{ mb: 2 }}>
-        Please fill out accordingly
+        Please update the form as needed.
       </Typography>
       <StyledInput
         label="Research Title"
@@ -200,8 +188,7 @@ const PublicationForm = () => {
       </Typography>
       <Divider sx={{ my: 2 }} />
       <Typography variant="subtitle1" gutterBottom sx={{ mb: 2 }}>
-        Here is the file needed
-        <StyledLink href="/needed"> needed </StyledLink>
+        Please upload the required documents or update the existing ones.
       </Typography>
       <FileInput id="protocol-file" label="Protocol Review Application" onChange={handleFileChange('protocolFile')} />
       <FileInput id="endorsement-file" label="Endorsement Letter/Adviser’s Certification" onChange={handleFileChange('endorsementFile')} />
@@ -214,7 +201,7 @@ const PublicationForm = () => {
       <FileInput id="receipt-file" label="Proof of Payment/Receipt" onChange={handleFileChange('receiptFile')} />
 
       <Button type="submit" variant="contained" color="primary" fullWidth>
-        Submit
+        Update Submission
       </Button>
 
       <Snackbar open={snackbarOpen} autoHideDuration={6000} onClose={handleSnackbarClose}>
@@ -226,4 +213,4 @@ const PublicationForm = () => {
   );
 };
 
-export default PublicationForm;
+export default RecEdit;
