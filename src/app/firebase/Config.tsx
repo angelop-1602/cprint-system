@@ -1,5 +1,4 @@
 import { initializeApp } from "firebase/app";
-import { getAnalytics } from "firebase/analytics";
 import { getAuth, OAuthProvider } from "firebase/auth";
 import { getFirestore } from 'firebase/firestore';
 import { getStorage } from 'firebase/storage';
@@ -17,10 +16,9 @@ const firebaseConfig = {
 
 // Initialize Firebase
 const app = initializeApp(firebaseConfig);
-const analytics = typeof window !== "undefined" ? getAnalytics(app) : null;
 const auth = getAuth(app);
 const provider = new OAuthProvider("microsoft.com");
 const db = getFirestore(app);
 const storage = getStorage(app);
 
-export { app, analytics, auth, provider, db, storage};
+export { app, auth, provider, db, storage };

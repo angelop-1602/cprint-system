@@ -1,45 +1,45 @@
-// theme.ts
+// src/app/theme/theme.ts
+
 import { createTheme } from '@mui/material/styles';
 
 const theme = createTheme({
   palette: {
     primary: {
-      main: '#036635', // Main green color
-      light: '#4CAF50', // Lighter green for hover or secondary actions
-      dark: '#003300', // Darker green for disabled states
-      contrastText: '#ffffff', // Text color on primary background
+      main: '#036635', // Main dark green color
+      light: '#4CAF50', // Lighter green with 80% opacity ()
+      dark: '#003300', // Dark green color
+      contrastText: '#ffffff', // White text for contrast
     },
     secondary: {
-      main: '#FECC07', // Main yellow color
-      light: '#FFF176', // Lighter yellow for hover or secondary actions
-      dark: '#C6A700', // Darker yellow for disabled states
-      contrastText: '#000000', // Text color on secondary background
+      main: '#FECC07', // Main secondary color
+      light: '#FFF176', // Lighter secondary color
+      dark: '#C6A700', // Darker secondary color
+      contrastText: '#000000', // Black text for contrast
     },
-    // You can define more colors here as needed
     error: {
-      main: '#f44336', // Main error color
+      main: '#f44336', // Error color
     },
     warning: {
-      main: '#ff9800', // Main warning color
+      main: '#ff9800', // Warning color
     },
     info: {
-      main: '#2196F3', // Main info color
+      main: '#2196F3', // Info color
     },
     success: {
-      main: '#4CAF50', // Main success color
+      main: '#4CAF50', // Success color
     },
   },
   shape: {
-    borderRadius: 8, // Rounded corners globally
+    borderRadius: 8, // Border radius for components
   },
   typography: {
     button: {
-      textTransform: 'none', // Avoid uppercase transformation in buttons
+      textTransform: 'none', // Disable text transformation for buttons
     },
   },
 });
 
-// Styles for buttons based on variants
+// Button styles using the theme
 export const buttonStyles = (variant: 'primary' | 'secondary' | 'light' | 'dark') => {
   switch (variant) {
     case 'primary':
@@ -47,7 +47,7 @@ export const buttonStyles = (variant: 'primary' | 'secondary' | 'light' | 'dark'
         backgroundColor: theme.palette.primary.main,
         color: theme.palette.primary.contrastText,
         '&:hover': {
-          backgroundColor: theme.palette.primary.light,
+          backgroundColor: theme.palette.primary.light, // Use the modified light color
         },
       };
     case 'secondary':
@@ -60,7 +60,7 @@ export const buttonStyles = (variant: 'primary' | 'secondary' | 'light' | 'dark'
       };
     case 'light':
       return {
-        backgroundColor: theme.palette.primary.light,
+        backgroundColor: theme.palette.primary.light, // Use the modified light color
         color: theme.palette.primary.contrastText,
         '&:hover': {
           backgroundColor: theme.palette.primary.main,
@@ -75,7 +75,7 @@ export const buttonStyles = (variant: 'primary' | 'secondary' | 'light' | 'dark'
         },
       };
     default:
-      return {}; // Fallback to default styles
+      return {};
   }
 };
 

@@ -1,28 +1,19 @@
-"use client"; // Client-side rendering required for hooks
-
-import { useEffect } from 'react';
-import { onAuthStateChanged } from 'firebase/auth';
+// src/app/components/ProtectedRoute.tsx
+import React from 'react';
 import { useRouter } from 'next/navigation';
-import { usePathname } from 'next/navigation';
-import { auth } from '@/app/firebase/Config';
+import useAuth from '../hooks/useAuth';
 
-const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
+const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  const { isAuthenticated } = useAuth();
   const router = useRouter();
-  const pathname = usePathname();
 
-  useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (user) => {
-      // Check if user is not authenticated and not already on sign-in page
-      if (!user && !pathname.includes('/pages/signin')) {
-        router.push('/pages/signin');
-      }
-    });
+  React.useEffect(() => {
+    if (!isAuthenticated) {
+      router.push('/signin');
+    }
+  }, [isAuthenticated, router]);
 
-    return () => unsubscribe(); // Cleanup subscription on unmount
-  }, [router, pathname]);
-
-  // Render the children if the user is authenticated, else nothing
-  return <>{children}</>;
+  return <>{isAuthenticated ? children : null}</>;
 };
 
 export default ProtectedRoute;

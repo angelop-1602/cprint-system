@@ -1,5 +1,3 @@
-"use client"; // Required for client-side rendering
-
 import React from 'react';
 import {
   Drawer,
@@ -16,15 +14,16 @@ import DashboardIcon from '@mui/icons-material/Dashboard';
 import ArticleIcon from '@mui/icons-material/Article';
 import LocalLibraryIcon from '@mui/icons-material/LocalLibrary';
 import TaskIcon from '@mui/icons-material/Task';
+
 // Width of the drawer
 const drawerWidth = 240;
 
 const menuItems = [
-  { text: 'Dashboard', icon: <DashboardIcon /> },
-  { text: 'REC', icon: <ArticleIcon /> },
-  { text: 'Publication', icon: <LocalLibraryIcon /> },
-  { text: 'Student Clearance', icon: <TaskIcon /> },
-  { text: 'Faculty Clearance', icon: <TaskIcon /> },
+  { id: '1', text: 'Dashboard', icon: <DashboardIcon /> },
+  { id: '2', text: 'REC', icon: <ArticleIcon /> },
+  { id: '3', text: 'Publication', icon: <LocalLibraryIcon /> },
+  { id: '4', text: 'Student Clearance', icon: <TaskIcon /> },
+  { id: '5', text: 'Faculty Clearance', icon: <TaskIcon /> },
 ];
 
 const SideBar = ({
@@ -36,7 +35,7 @@ const SideBar = ({
   open: boolean; // State to control whether the sidebar is open
   onClose: () => void; // Callback to close the sidebar
   activeItem: string; // Current active item text
-  variant: 'permanent' | 'temporary'; // Type to control the variant for desktop/mobile
+  variant?: 'permanent' | 'temporary'; // Type to control the variant for desktop/mobile
 }) => {
   return (
     <Drawer
@@ -70,29 +69,28 @@ const SideBar = ({
       </Box>
       <Divider sx={{ backgroundColor: '#DDDDDD', marginBottom: '8px' }} />
       <List>
-        {menuItems.map(({ text, icon }) => (
-          <Link href={`/pages/${text.toLowerCase()}`} passHref onClick={onClose}>
+        {menuItems.map(({ id, text, icon }) => (
+          <Link href={`/pages/${text.toLowerCase()}`} passHref key={id}>
             <ListItemButton
-              key={text}
+              onClick={onClose} // Close sidebar on item click
               sx={{
                 '&:hover': {
                   backgroundColor: '#03663566',
                   transition: 'background-color 0.3s',
                 },
                 backgroundColor: activeItem === text.toLowerCase() ? '#036635CC' : 'transparent', // Match case
-                color: activeItem === text.toLowerCase() ? '#fff' : '#333', 
+                color: activeItem === text.toLowerCase() ? '#fff' : '#333',
                 marginBottom: '8px',
               }}
             >
               <Box sx={{ display: 'flex', alignItems: 'center', width: '100%' }}>
                 {icon}
-                <ListItemText primary={text} sx={{ marginLeft: '8px', color: activeItem === text.toLowerCase() ? '#fff' : '#333',  }} />
+                <ListItemText primary={text} sx={{ marginLeft: '8px', color: activeItem === text.toLowerCase() ? '#fff' : '#333' }} />
               </Box>
             </ListItemButton>
           </Link>
         ))}
       </List>
-
     </Drawer>
   );
 };

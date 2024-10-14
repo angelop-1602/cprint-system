@@ -1,83 +1,49 @@
-"use client"; // Only if you need client-side functionality in this component.
-
+'use client'; 
 import { useState } from 'react';
-import { Box, CssBaseline, Toolbar, useMediaQuery, CircularProgress } from '@mui/material';
-import TopBar from './components/TopBar';
+import { Box, CssBaseline } from '@mui/material';
 import ProtectedRoute from './components/ProtectedRoute';
-import SignInPage from './pages/signin/page';
-import SideBar from './components/SideBar';
-import './globals.css'; // Global styles
-import useAuth from '@/app/hooks/useAuth'; // Custom hook for authentication
-import theme from './Theme/theme'; // Your MUI theme
+import './globals.css';
+import useAuth from '@/app/hooks/useAuth';
+import theme from './Theme/theme';
 import { ThemeProvider } from '@mui/material/styles';
 import Head from 'next/head';
-import { usePathname } from 'next/navigation'; // Import usePathname
+import AuthenticatedLayout from './components/AuthenicatedLayout';
+import Page from './page';
+import PulsingLoader from './components/Loader';
 
-export default function RootLayout({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
+export default function RootLayout({ children }: { children: React.ReactNode }) {
   const [open, setOpen] = useState(false);
-  const isDesktop = useMediaQuery('(min-width:600px)');
   const { isAuthenticated, loading } = useAuth();
-  const pathname = usePathname(); // Get the current pathname
-  const currentPath = pathname.split('/').pop().toLowerCase(); // Use lowercase for comparison
 
-  const handleDrawerToggle = () => {
-    setOpen(!open);
-  };
+  const handleDrawerToggle = () => setOpen(!open);
 
   if (loading) {
     return (
-      <Box
-        sx={{
-          display: 'flex',
-          justifyContent: 'center',
-          alignItems: 'center',
-          height: '100vh',
-        }}
-      >
-        <CircularProgress />
+      <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh' }}>
+        <PulsingLoader />
       </Box>
     );
   }
 
   return (
-    <html lang="en"> {/* Required html tag */}
+    <html lang="en">
       <Head>
         <title>CPRINT</title>
         <meta name="description" content="My application description" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <link rel="icon" href="/favicon.ico" />
       </Head>
       <body>
         <ThemeProvider theme={theme}>
           <CssBaseline />
           {isAuthenticated ? (
             <ProtectedRoute>
-              <Box sx={{ display: 'flex' }}>
-                <TopBar onMenuClick={handleDrawerToggle} />
-                <SideBar
-                  open={isDesktop ? true : open}
-                  onClose={handleDrawerToggle}
-                  variant={isDesktop ? 'permanent' : 'temporary'}
-                  activeItem={currentPath} // Pass the active item to the SideBar
-                />
-                <Box
-                  component="main"
-                  sx={{
-                    flexGrow: 1,
-                    bgcolor: 'background.default',
-                    p: 3,
-                  }}
-                >
-                  <Toolbar />
-                  {children}
-                </Box>
-              </Box>
+              <AuthenticatedLayout onMenuClick={handleDrawerToggle} open={open}>
+                {children}
+              </AuthenticatedLayout>
             </ProtectedRoute>
           ) : (
-            <SignInPage />
+            <Page />
           )}
         </ThemeProvider>
       </body>

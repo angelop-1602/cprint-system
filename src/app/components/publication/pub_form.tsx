@@ -1,3 +1,5 @@
+// src/components/publication/PublicationForm.tsx
+'use client';
 
 import React, { useState, useEffect } from 'react';
 import {
@@ -10,7 +12,7 @@ import {
 } from '@mui/material';
 import FileInput from '../reusable/FileInput'; // Reusable file input component
 import { auth, db, storage } from '@/app/firebase/Config'; // Ensure this is your correct Firebase config path
-import { doc, setDoc, collection, getDocs, query, where } from 'firebase/firestore';
+import { doc, getDoc, setDoc } from 'firebase/firestore';
 import { ref, uploadBytes } from 'firebase/storage';
 import { useRouter } from 'next/navigation';
 import StyledInput from '../reusable/StyledInput'; // Custom styled input component
@@ -18,7 +20,7 @@ import StyledLink from '../reusable/StyledLink'; // Custom styled link component
 import { Routes } from '@/app/route/routes';
 import { onAuthStateChanged } from 'firebase/auth'; // Importing the auth state listener
 
-const RecForm = () => {
+const PublicationForm = () => {
   const router = useRouter();
   const [researchTitle, setResearchTitle] = useState('');
   const [researcherName, setResearcherName] = useState('');
@@ -43,22 +45,55 @@ const RecForm = () => {
   const [snackbarSeverity, setSnackbarSeverity] = useState<'success' | 'error'>('success');
 
   useEffect(() => {
+    // Listen for user authentication state
     const unsubscribe = onAuthStateChanged(auth, (user) => {
       if (user) {
-        console.log('User is authenticated:', user); // Log user info
-        setUserEmail(user.email || '');
-        setUserName(user.displayName || '');
-        setResearcherName(user.displayName || '');
+        console.log('User authenticated:', user); // Debugging line
+        setUserEmail(user.email || ''); // Set user email
+        setUserName(user.displayName || ''); // Set user name (if available)
+        setResearcherName(user.displayName || ''); // Optionally set researcherName to user's display name
       } else {
-        console.log('No user is authenticated');
+        console.log('No user is authenticated'); // Debugging line
         setUserEmail('');
         setUserName('');
       }
     });
-  
-    return () => unsubscribe();
+
+    return () => unsubscribe(); // Clean up the subscription
   }, []);
-  
+
+  useEffect(() => {
+    const fetchSubmission = async () => {
+      const userId = auth.currentUser?.uid; // Get the current user's UID
+      console.log('Current User ID:', userId); // Debugging line
+
+      if (!userId) {
+        console.log('User is not authenticated');
+        return; // Ensure user is authenticated
+      }
+
+      const docRef = doc(db, 'publication_submissions', userId); // Use user's UID
+      console.log('Document Reference:', docRef); // Debugging line
+
+      try {
+        const docSnap = await getDoc(docRef);
+        if (docSnap.exists()) {
+          const data = docSnap.data();
+          console.log('Fetched data:', data); // Debugging line
+          setResearchTitle(data.researchTitle || '');
+          setCourseProgram(data.courseProgram || '');
+          setAdviserName(data.adviserName || '');
+        } else {
+          console.log('No such document!'); // This will log if the document doesn't exist
+        }
+      } catch (error) {
+        console.error('Error fetching document:', error); // Catch any errors while fetching
+      }
+    };
+
+    fetchSubmission();
+  }, [auth.currentUser]);
+
   const handleFileChange = (key: string) => (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0] || null;
     setFiles((prev) => ({ ...prev, [key]: file }));
@@ -66,7 +101,7 @@ const RecForm = () => {
 
   const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
-  
+
     const userId = auth.currentUser?.uid; // Get the current user's UID
     if (!userId) {
       setSnackbarMessage('User is not authenticated.');
@@ -76,65 +111,37 @@ const RecForm = () => {
     }
 
     try {
-      // Check for existing submissions by the current user
-      const submissionsRef = collection(db, 'research_submissions');
-      const q = query(submissionsRef, where('userEmail', '==', userEmail)); // Query based on user email
-      const querySnapshot = await getDocs(q);
-      
-      // Generate a unique document ID (you could use a timestamp or UUID)
-      const submissionId = `${userId}_${Date.now()}`; // Unique submission ID
-      const docRef = doc(db, 'research_submissions', submissionId); // Use the unique submission ID
-
-      // Create the new submission regardless of previous submissions
+      const docRef = doc(db, 'publication_submissions', userId); // Use user's UID as the document ID
       await setDoc(docRef, {
         researchTitle,
-        researcherName,
-        userEmail,
+        researcherName, // Use name from state
+        userEmail,      // Include user email in submission
         courseProgram,
         adviserName,
-        createdAt: new Date(), // Optional: Store the creation date
-      });
-  
-      const currentDate = new Date().toISOString().split('T')[0];
-  
-      // Upload files logic remains the same
+      }, { merge: true });
+
+      // Upload files as before
       const uploadPromises = Object.entries(files).map(async ([key, file]) => {
         if (file) {
-          const fileLabel = {
-            protocolFile: "Protocol Review Application",
-            endorsementFile: "Endorsement Letter",
-            minutesFile: "Minutes of the Proposal Defense",
-            proposalFile: "Research Proposal",
-            consentFile: "Informed Consent",
-            technicalFile: "Technical Review Approval",
-            questionnaireFile: "Questionnaire",
-            cvFile: "Curriculum Vitae",
-            receiptFile: "Proof of Payment",
-          }[key];
-  
-          const fileName = `${fileLabel}_${userName}_${currentDate}`; 
-          const fileRef = ref(storage, `research_files/${userId}/${fileName}`);
+          const fileRef = ref(storage, `publication_files/${userId}/${key}`); // Use user's UID in the path
           await uploadBytes(fileRef, file);
         }
       });
-  
-      await Promise.all(uploadPromises);
-  
+
+      await Promise.all(uploadPromises); // Wait for all uploads to complete
+
       setSnackbarMessage('Form submitted successfully!');
       setSnackbarSeverity('success');
-      router.push(Routes.REC);
+      router.push(Routes.REC); // Navigate to another page on success
     } catch (error) {
       console.error('Error submitting form: ', error);
       setSnackbarMessage('Failed to submit the form.');
       setSnackbarSeverity('error');
     }
-  
+
     setSnackbarOpen(true);
   };
-  
-  const userId = auth.currentUser?.uid; 
-  console.log('User ID:', userId);
-  
+
   const handleSnackbarClose = () => setSnackbarOpen(false);
 
   return (
@@ -153,7 +160,7 @@ const RecForm = () => {
       }}
     >
       <Typography variant="h5" gutterBottom>
-        REC Submission
+        Publication Submission
       </Typography>
       <Divider sx={{ my: 2 }} />
       <Typography variant="subtitle1" gutterBottom sx={{ mb: 2 }}>
@@ -219,4 +226,4 @@ const RecForm = () => {
   );
 };
 
-export default RecForm;
+export default PublicationForm;

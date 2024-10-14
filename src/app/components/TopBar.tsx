@@ -1,5 +1,3 @@
-"use client"; // Required for client-side rendering
-
 import React from 'react';
 import { AppBar, Toolbar, IconButton, useMediaQuery, Typography } from '@mui/material';
 import MenuIcon from '@mui/icons-material/Menu';
