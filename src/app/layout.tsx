@@ -1,51 +1,27 @@
-'use client'; 
-import { useState } from 'react';
-import { Box, CssBaseline } from '@mui/material';
-import ProtectedRoute from './components/ProtectedRoute';
-import './globals.css';
-import useAuth from '@/app/hooks/useAuth';
-import theme from './Theme/theme';
-import { ThemeProvider } from '@mui/material/styles';
-import Head from 'next/head';
-import AuthenticatedLayout from './components/AuthenicatedLayout';
-import Page from './page';
-import PulsingLoader from './components/Loader';
 
-export default function RootLayout({ children }: { children: React.ReactNode }) {
-  const [open, setOpen] = useState(false);
-  const { isAuthenticated, loading } = useAuth();
+import './globals.css'; // Global styles
+import { ReactNode } from 'react';
+import { Metadata } from 'next'; // Import Metadata if you are using it
+import Layout from './components/Layout';
 
-  const handleDrawerToggle = () => setOpen(!open);
+// Metadata (if applicable)
+export const metadata: Metadata = {
+  title: 'CPRINT',
+  description: 'My application description',
+};
 
-  if (loading) {
-    return (
-      <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh' }}>
-        <PulsingLoader />
-      </Box>
-    );
-  }
-
+// RootLayout Component
+export default function RootLayout({ children }: { children: ReactNode }) {
   return (
     <html lang="en">
-      <Head>
+      <head>
         <title>CPRINT</title>
         <meta name="description" content="My application description" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         <link rel="icon" href="/favicon.ico" />
-      </Head>
+      </head>
       <body>
-        <ThemeProvider theme={theme}>
-          <CssBaseline />
-          {isAuthenticated ? (
-            <ProtectedRoute>
-              <AuthenticatedLayout onMenuClick={handleDrawerToggle} open={open}>
-                {children}
-              </AuthenticatedLayout>
-            </ProtectedRoute>
-          ) : (
-            <Page />
-          )}
-        </ThemeProvider>
+        <Layout>{children}</Layout>
       </body>
     </html>
   );

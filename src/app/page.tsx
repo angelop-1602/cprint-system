@@ -3,7 +3,7 @@
 import React from 'react';
 import { Button, Box, Typography, Snackbar } from '@mui/material';
 import useAuth from '@/app/hooks/useAuth';
-import PulsingLoader from './components/Loader';
+import PulsingLoader from './components/PulsingLoader';
 
 const Page = () => {
   const { signInWithMicrosoft, errorMessage, setErrorMessage, isSigningIn, loading } = useAuth();

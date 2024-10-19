@@ -1,42 +1,29 @@
 import React from 'react';
-import {
-  Drawer,
-  List,
-  ListItemButton,
-  ListItemText,
-  Toolbar,
-  Divider,
-  Box,
-  Typography,
-} from '@mui/material';
+import { Drawer, List, ListItemButton, ListItemText, Toolbar, Divider, Box, Typography } from '@mui/material';
 import Link from 'next/link';
 import DashboardIcon from '@mui/icons-material/Dashboard';
 import ArticleIcon from '@mui/icons-material/Article';
 import LocalLibraryIcon from '@mui/icons-material/LocalLibrary';
 import TaskIcon from '@mui/icons-material/Task';
 
-// Width of the drawer
 const drawerWidth = 240;
 
 const menuItems = [
-  { id: '1', text: 'Dashboard', icon: <DashboardIcon /> },
-  { id: '2', text: 'REC', icon: <ArticleIcon /> },
-  { id: '3', text: 'Publication', icon: <LocalLibraryIcon /> },
-  { id: '4', text: 'Student Clearance', icon: <TaskIcon /> },
-  { id: '5', text: 'Faculty Clearance', icon: <TaskIcon /> },
+  { id: '1', text: 'Dashboard', icon: <DashboardIcon />, path: '/pages/dashboard' },
+  { id: '2', text: 'REC', icon: <ArticleIcon />, path: '/pages/rec' },
+  { id: '3', text: 'Publication', icon: <LocalLibraryIcon />, path: '/pages/publication' },
+  { id: '4', text: 'Student Clearance', icon: <TaskIcon />, path: '/pages/student-clearance' },
+  { id: '5', text: 'Faculty Clearance', icon: <TaskIcon />, path: '/pages/faculty-clearance' },
 ];
 
-const SideBar = ({
-  open,
-  onClose,
-  activeItem, // Accept active item prop
-  variant = 'temporary', // Default to temporary variant for mobile
-}: {
-  open: boolean; // State to control whether the sidebar is open
-  onClose: () => void; // Callback to close the sidebar
-  activeItem: string; // Current active item text
-  variant?: 'permanent' | 'temporary'; // Type to control the variant for desktop/mobile
-}) => {
+interface SideBarProps {
+  open: boolean; // Open state of the sidebar
+  onClose: () => void; // Function to close the sidebar
+  activeItem: string; // Currently active item
+  variant?: 'temporary' | 'permanent' | 'persistent'; // Drawer variant
+}
+
+const SideBar: React.FC<SideBarProps> = ({ open, onClose, activeItem, variant = 'temporary' }) => {
   return (
     <Drawer
       sx={{
@@ -45,43 +32,35 @@ const SideBar = ({
         '& .MuiDrawer-paper': {
           width: drawerWidth,
           boxSizing: 'border-box',
-          backgroundColor: '#F7F7F7', // Light gray background
-          color: '#333', // Dark text color
-          borderRight: '1px solid #DDDDDD', // Light border
+          backgroundColor: '#F7F7F7',
+          color: '#333',
+          borderRight: '1px solid #DDDDDD',
         },
       }}
-      variant={variant} // Use the appropriate variant based on screen size
-      anchor="left" // Sidebar opens from the left
-      open={open} // Control the open state
-      onClose={onClose} // Function to call when closing the drawer
+      variant={variant}
+      anchor="left"
+      open={open}
+      onClose={onClose}
     >
       <Toolbar />
-      <Box
-        sx={{
-          padding: '16px',
-          textAlign: 'center',
-          borderBottom: '1px solid #DDDDDD', // Light border for separation
-        }}
-      >
+      <Box sx={{ padding: '16px', textAlign: 'center', borderBottom: '1px solid #DDDDDD' }}>
         <Typography variant="h6" sx={{ fontWeight: 'bold', color: '#333' }}>
           Services
         </Typography>
       </Box>
       <Divider sx={{ backgroundColor: '#DDDDDD', marginBottom: '8px' }} />
       <List>
-        {menuItems.map(({ id, text, icon }) => (
-          <Link href={`/pages/${text.toLowerCase()}`} passHref key={id}>
+        {menuItems.map(({ id, text, icon, path }) => (
+          <Link href={path} passHref key={id}>
             <ListItemButton
-              onClick={onClose} // Close sidebar on item click
+              onClick={onClose}
               sx={{
-                '&:hover': {
-                  backgroundColor: '#03663566',
-                  transition: 'background-color 0.3s',
-                },
-                backgroundColor: activeItem === text.toLowerCase() ? '#036635CC' : 'transparent', // Match case
+                '&:hover': { backgroundColor: '#03663566', transition: 'background-color 0.3s, color 0.3s' },
+                backgroundColor: activeItem === text.toLowerCase() ? '#036635CC' : 'transparent',
                 color: activeItem === text.toLowerCase() ? '#fff' : '#333',
                 marginBottom: '8px',
               }}
+              aria-label={text} // Add aria-label for accessibility
             >
               <Box sx={{ display: 'flex', alignItems: 'center', width: '100%' }}>
                 {icon}

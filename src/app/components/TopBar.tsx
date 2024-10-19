@@ -1,43 +1,33 @@
 import React from 'react';
-import { AppBar, Toolbar, IconButton, useMediaQuery, Typography } from '@mui/material';
+import { AppBar, Toolbar, IconButton, useMediaQuery, Typography, Box } from '@mui/material';
 import MenuIcon from '@mui/icons-material/Menu';
 import SignOutButton from './SignoutButton';
-
 interface TopBarProps {
   onMenuClick: () => void; // Callback for menu button click
 }
 
 const TopBar: React.FC<TopBarProps> = ({ onMenuClick }) => {
-  // Use media query to check if the screen size is mobile
-  const isMobile = useMediaQuery('(max-width:600px)');
+  const isMobile = useMediaQuery('(max-width:1024px)'); // Display menu only on mobile
 
   return (
-    <AppBar
-      position="fixed"
-      sx={{
-        zIndex: (theme) => theme.zIndex.drawer + 1,
-        backgroundColor: '#026635', // Set the background color to the specified color
-      }}
-    >
+    <AppBar position="fixed" sx={{ zIndex: (theme) => theme.zIndex.drawer + 1, backgroundColor: '#026635' }}>
       <Toolbar>
-        {isMobile && ( // Render the menu button only if in mobile view
-          <IconButton
-            edge="start"
-            color="inherit"
-            onClick={onMenuClick}
-            sx={{ mr: 2 }}
+        {isMobile && (
+          <IconButton 
+            edge="start" 
+            color="inherit" 
+            onClick={onMenuClick} 
+            sx={{ mr: 2 }} 
+            aria-label="open menu" // Accessibility improvement
           >
             <MenuIcon />
           </IconButton>
         )}
-
-        <Typography variant="h6" sx={{ padding: '16px', fontWeight: 'bold' }}>
+        <Typography variant="h6" sx={{ flexGrow: 1, padding: '16px', fontWeight: 'bold' }}>
           CPRINT System
         </Typography>
-
-        <span style={{ flexGrow: 1 }} /> {/* This ensures the space between title and Sign Out */}
-
-        <SignOutButton /> {/* Add the SignOutButton component */}
+        <Box sx={{ flexGrow: 1 }} /> {/* Spacer using Box for better layout control */}
+        <SignOutButton />
       </Toolbar>
     </AppBar>
   );

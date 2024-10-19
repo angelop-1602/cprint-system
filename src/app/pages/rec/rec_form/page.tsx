@@ -1,7 +1,7 @@
 // src/app/dashboard/page.tsx
 "use client";
 
-import RecForm from '@/app/components/rec/rec_form';
+import RecForm from '@/app/components/rec/recForm';
 import React from 'react';
 
 

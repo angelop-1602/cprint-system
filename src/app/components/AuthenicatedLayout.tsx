@@ -1,7 +1,7 @@
-import { Box, CssBaseline, Toolbar } from '@mui/material';
+import React, { useState } from 'react';
+import { Box, Toolbar, useMediaQuery } from '@mui/material';
 import TopBar from './TopBar';
 import SideBar from './SideBar';
-import { useMediaQuery } from '@mui/material';
 import { usePathname } from 'next/navigation';
 
 interface AuthenticatedLayoutProps {
@@ -10,18 +10,20 @@ interface AuthenticatedLayoutProps {
   open: boolean;
 }
 
-const AuthenticatedLayout: React.FC<AuthenticatedLayoutProps> = ({ children, onMenuClick, open }) => {
-  const isDesktop = useMediaQuery('(min-width:600px)');
+const AuthenticatedLayout: React.FC<AuthenticatedLayoutProps> = ({
+  children,
+  onMenuClick,
+  open,
+}) => {
+  const isDesktop = useMediaQuery('(min-width:1030px)');
   const pathname = usePathname();
-  
-  // Fix: Add a check to avoid 'undefined' when calling toLowerCase
-  const currentPath = pathname.split('/').pop()?.toLowerCase() || ''; // Default to empty string if undefined
+  const currentPath = pathname.split('/').pop()?.toLowerCase() || '';
 
   return (
     <Box sx={{ display: 'flex' }}>
       <TopBar onMenuClick={onMenuClick} />
       <SideBar
-        open={isDesktop ? true : open}
+        open={isDesktop ? true : open} // Sidebar is permanently open on desktop
         onClose={onMenuClick}
         variant={isDesktop ? 'permanent' : 'temporary'}
         activeItem={currentPath}
@@ -31,11 +33,11 @@ const AuthenticatedLayout: React.FC<AuthenticatedLayoutProps> = ({ children, onM
         sx={{
           flexGrow: 1,
           bgcolor: 'background.default',
-          p: 3,
+          p: 3, // Adjust padding based on content requirements
         }}
       >
         <Toolbar />
-        <main>{children}</main>
+        {children}
       </Box>
     </Box>
   );

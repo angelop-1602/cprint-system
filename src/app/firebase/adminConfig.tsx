@@ -3,11 +3,16 @@ import admin from 'firebase-admin';
 
 // Check if the default app has already been initialized
 if (!admin.apps.length) {
-  admin.initializeApp({
-    credential: admin.credential.applicationDefault(),
-    // You can specify databaseURL if you are using Firestore or Realtime Database
-    databaseURL: "https://console.firebase.google.com/u/2/project/cprint-automation/database/cprint-automation-default-rtdb/data/~2F",
-  });
+  try {
+    admin.initializeApp({
+      credential: admin.credential.applicationDefault(),
+      databaseURL: process.env.NEXT_PUBLIC_FIREBASE_DATABASE_URL, // Use an environment variable for the database URL
+    });
+  } catch (error) {
+    console.error("Error initializing Firebase Admin SDK:", error);
+    throw new Error("Failed to initialize Firebase Admin SDK");
+  }
 }
 
+// Export the auth object
 export const auth = admin.auth();

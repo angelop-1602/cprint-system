@@ -1,7 +1,19 @@
 import React from 'react';
 import { Box } from '@mui/material';
 
-const PulsingLoader: React.FC<{ message?: string }> = ({ message }) => {
+interface PulsingLoaderProps {
+  message?: string;
+  loaderSrc?: string; // Allow loader image source to be customizable
+  loaderSize?: string; // Allow loader size to be customizable
+  backgroundColor?: string; // Allow background color to be customizable
+}
+
+const PulsingLoader: React.FC<PulsingLoaderProps> = ({
+  message,
+  loaderSrc = '/favicon.ico', // Default to favicon
+  loaderSize = '100px', // Default size
+  backgroundColor = 'rgba(255, 255, 255)', // Default background
+}) => {
   return (
     <Box
       sx={{
@@ -10,7 +22,7 @@ const PulsingLoader: React.FC<{ message?: string }> = ({ message }) => {
         alignItems: 'center',
         justifyContent: 'center',
         height: '100vh',
-        backgroundColor: 'rgba(255, 255, 255, 0.7)',
+        backgroundColor: backgroundColor,
         position: 'fixed',
         top: 0,
         left: 0,
@@ -20,14 +32,17 @@ const PulsingLoader: React.FC<{ message?: string }> = ({ message }) => {
     >
       <Box
         component="img"
-        src="/favicon.ico" // Path to your favicon
+        src={loaderSrc} // Use the customizable loader source
         sx={{
-          width: '100px', // Starting size
+          width: loaderSize, // Use the customizable loader size
           animation: 'pulse 1.5s infinite', // Animation properties
         }}
+        alt="Loading" // Add alt text for accessibility
       />
       {message && (
-        <div style={{ marginTop: '16px', fontSize: '18px' }}>{message}</div>
+        <div style={{ marginTop: '16px', fontSize: '18px', textAlign: 'center' }}>
+          {message}
+        </div>
       )}
 
       <style jsx>{`

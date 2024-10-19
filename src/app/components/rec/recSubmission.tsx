@@ -1,11 +1,11 @@
-// RecSubmission.tsx
+// recSubmission.tsx
 import React, { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import ReusableTable from '../reusable/Table';
 import { Routes } from '@/app/route/routes';
-import PulsingLoader from '../Loader';
+import PulsingLoader from '../PulsingLoader';
 import { auth, db } from '@/app/firebase/Config';
-import { collection, getDocs } from 'firebase/firestore';
+import { collection, getDocs, query, where } from 'firebase/firestore';
 import { onAuthStateChanged } from 'firebase/auth';
 import { Snackbar, Alert } from '@mui/material';
 import { Visibility as VisibilityIcon, EditNote as EditNoteIcon } from '@mui/icons-material';
@@ -15,6 +15,13 @@ interface Submission {
   title: string;
   status: string;
   date: string;
+}
+
+// Define an interface for the Firestore document structure if needed
+interface FirestoreSubmission {
+  researchTitle: string;
+  status: string;
+  createdAt: { toDate: () => Date }; // Adjust based on actual Firestore structure
 }
 
 const RecSubmission: React.FC = () => {
@@ -28,7 +35,7 @@ const RecSubmission: React.FC = () => {
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (user) => {
       if (user) {
-        fetchSubmissions();
+        fetchSubmissions(user.uid); // Pass the user ID to fetch only the user's submissions
       } else {
         setSnackbarMessage('User is not authenticated.');
         setSnackbarSeverity('error');
@@ -36,30 +43,33 @@ const RecSubmission: React.FC = () => {
         setLoading(false);
       }
     });
-
+  
     return () => unsubscribe();
   }, []);
+  
 
-  const fetchSubmissions = async () => {
+  const fetchSubmissions = async (userId: string) => {
     setLoading(true);
     try {
+      // Reference to the research_submissions collection with a query filtering by user ID
       const submissionsRef = collection(db, 'research_submissions');
-      const querySnapshot = await getDocs(submissionsRef);
-
-      const submissions: Submission[] = [];
-      querySnapshot.forEach((doc) => {
-        const data = doc.data();
-        submissions.push({
+      const q = query(submissionsRef, where('userId', '==', userId)); // Filter by userId
+  
+      const querySnapshot = await getDocs(q);
+  
+      const submissions: Submission[] = querySnapshot.docs.map((doc) => {
+        const data = doc.data() as FirestoreSubmission;
+        return {
           id: doc.id,
           title: data.researchTitle || 'Unknown',
           status: data.status || 'Pending',
           date: data.createdAt?.toDate().toLocaleDateString() || new Date().toLocaleDateString(),
-        });
+        };
       });
-
+  
       setTableData(submissions);
     } catch (error) {
-      const err = error as Error;
+      const err = error instanceof Error ? error : new Error('An unknown error occurred.');
       setSnackbarMessage(`Failed to fetch submissions: ${err.message}`);
       setSnackbarSeverity('error');
       setSnackbarOpen(true);
@@ -70,32 +80,28 @@ const RecSubmission: React.FC = () => {
 
   const handleSnackbarClose = () => setSnackbarOpen(false);
 
-  const columns: { id: keyof Submission; label: string }[] = [
-    { id: 'title', label: 'Research Title' },
-    { id: 'status', label: 'Status' },
-    { id: 'date', label: 'Date' },
+  const columns: { id: keyof Submission; label: string; width?: number }[] = [
+    { id: 'title', label: 'Research Title', width: 200 },
+    { id: 'status', label: 'Status', width: 100 },
+    { id: 'date', label: 'Date', width: 150 },
   ];
 
-  const actions: {
-    label: string;
-    onClick: (item: Submission) => void;
-    customVariant?: 'primary' | 'secondary' | 'light' | 'dark'; // Ensure correct types
-    icon?: React.ReactNode; // Optional icon
-  }[] = [
-    {
-      label: 'Review',
-      onClick: (item: Submission) => router.push(`${Routes.REC}/${item.id}`),
-      customVariant: 'primary', // Valid variant
-      icon: <VisibilityIcon />, // Optional icon
-    },
-    {
-      label: 'Edit',
-      onClick: (item: Submission) => router.push(`${Routes.REC_EDIT}?id=${item.id}`),
-      customVariant: 'secondary', // Valid variant
-      icon: <EditNoteIcon />, // Optional icon
-    },
-  ];
-  
+// recSubmission.tsx
+const actions = [
+  {
+    label: 'Review',
+    onClick: (item: Submission) => router.push(`${Routes.REC_VIEW}?id=${item.id}`),
+    customVariant: 'primary', // Must match one of 'primary' | 'secondary' | 'light' | 'dark'
+    icon: <VisibilityIcon />,
+  },
+  {
+    label: 'Edit',
+    onClick: (item: Submission) => router.push(`${Routes.REC_EDIT}?id=${item.id}`),
+    customVariant: 'secondary', // Must match one of 'primary' | 'secondary' | 'light' | 'dark'
+    icon: <EditNoteIcon />,
+  },
+];
+
 
   if (loading) {
     return <PulsingLoader />;

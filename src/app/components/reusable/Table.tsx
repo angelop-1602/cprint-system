@@ -1,4 +1,3 @@
-// ReusableTable.tsx
 import React from 'react';
 import {
   Table,
@@ -10,7 +9,7 @@ import {
   Paper,
 } from '@mui/material';
 import ReusableButton from './Button';
-import { useTheme } from '@mui/material/styles'; // Import useTheme hook
+import { useTheme } from '@mui/material/styles';
 
 interface Column<T> {
   id: keyof T;
@@ -20,8 +19,8 @@ interface Column<T> {
 interface Action<T> {
   label: string;
   onClick: (item: T) => void;
-  customVariant?: 'primary' | 'secondary' | 'light' | 'dark'; // Ensure the types are correct
-  icon?: React.ReactNode; // Add icon property for the button
+  customVariant: 'primary' | 'secondary' | 'light' | 'dark'; // Ensure this matches your expected variants
+  icon: React.ReactNode;
 }
 
 interface ReusableTableProps<T> {
@@ -31,6 +30,13 @@ interface ReusableTableProps<T> {
   emptyMessage?: string;
   maxHeight?: string;
 }
+// Table.tsx
+interface Action<T> {
+  label: string;
+  onClick: (item: T) => void;
+  customVariant: 'primary' | 'secondary' | 'light' | 'dark'; // Enforced strict type
+  icon: React.ReactNode;
+}
 
 const ReusableTable = <T extends Record<string, any>>({
   data,
@@ -39,7 +45,13 @@ const ReusableTable = <T extends Record<string, any>>({
   emptyMessage,
   maxHeight = '400px',
 }: ReusableTableProps<T>) => {
-  const theme = useTheme(); // Get the theme object
+  const theme = useTheme();
+
+  // Helper function to render table cells
+  const renderCell = (item: T, columnId: keyof T) => {
+    const cellValue = item[columnId];
+    return cellValue !== undefined ? String(cellValue) : '';
+  };
 
   return (
     <TableContainer
@@ -47,35 +59,36 @@ const ReusableTable = <T extends Record<string, any>>({
       sx={{
         maxHeight,
         overflowY: 'auto',
-        boxShadow: 3, // Add shadow here
-        borderRadius: 2, // Optional: round corners
+        overflowX: 'auto',
+        boxShadow: 3,
+        borderRadius: 2,
       }}
     >
-      <Table stickyHeader>
+      <Table stickyHeader sx={{ minWidth: '600px' }} role="table">
         <TableHead>
           <TableRow>
-            {columns.map((column) => (
-              <TableCell 
-                key={String(column.id)} 
-                align="center" // Center the text in the header
+            {columns.map(({ id, label }) => (
+              <TableCell
+                key={String(id)}
+                align="center"
                 sx={{
-                  backgroundColor: theme.palette.primary.main, // Use the theme for the background color
-                  color: theme.palette.primary.contrastText, // Text color
-                  fontWeight: 'bold', // Bold text
-                  fontSize: '1.2rem', // Make text larger
+                  backgroundColor: theme.palette.primary.main,
+                  color: theme.palette.primary.contrastText,
+                  fontWeight: 'bold',
+                  fontSize: '1.2rem',
                 }}
               >
-                {column.label}
+                {label}
               </TableCell>
             ))}
             {actions && (
-              <TableCell 
-                align="center" 
+              <TableCell
+                align="center"
                 sx={{
-                  backgroundColor: theme.palette.primary.main, // Same header color
-                  color: theme.palette.primary.contrastText, // Text color
-                  fontWeight: 'bold', // Bold text
-                  fontSize: '1.2rem', // Make text larger
+                  backgroundColor: theme.palette.primary.main,
+                  color: theme.palette.primary.contrastText,
+                  fontWeight: 'bold',
+                  fontSize: '1.2rem',
                 }}
               >
                 Actions
@@ -85,21 +98,21 @@ const ReusableTable = <T extends Record<string, any>>({
         </TableHead>
         <TableBody>
           {data.length > 0 ? (
-            data.map((item, index) => (
-              <TableRow key={index}>
-                {columns.map((column) => (
-                  <TableCell key={String(column.id)}>
-                    {String(item[column.id])}
+            data.map((item) => (
+              <TableRow key={item.id || item.name || item.label}> {/* Use a unique identifier here */}
+                {columns.map(({ id }) => (
+                  <TableCell key={String(id)}>
+                    {renderCell(item, id)}
                   </TableCell>
                 ))}
                 {actions && (
                   <TableCell align="center">
-                    {actions.map((action, idx) => (
+                    {actions.map((action) => (
                       <ReusableButton
                         key={action.label}
                         customVariant={action.customVariant || 'primary'}
                         onClick={() => action.onClick(item)}
-                        startIcon={action.icon} // Include icon
+                        startIcon={action.icon}
                       >
                         {action.label}
                       </ReusableButton>

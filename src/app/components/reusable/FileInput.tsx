@@ -1,72 +1,124 @@
-import React from 'react';
-import { InputLabel, Box, Button } from '@mui/material';
+import React, { useState } from 'react';
+import { InputLabel, Box, Button, Typography, CircularProgress } from '@mui/material';
 
 interface FileInputProps {
   id: string;
   label: string;
   accept?: string;
-  onChange: (event: React.ChangeEvent<HTMLInputElement>) => void;
+  onChange: (event: React.ChangeEvent<HTMLInputElement>, fileName: string) => void;
+  fileName?: string | null; // Prop to receive the file name
 }
 
-const FileInput: React.FC<FileInputProps> = ({ id, label, accept = '.pdf,.doc,.docx', onChange }) => {
+const FileInput: React.FC<FileInputProps> = ({ id, label, accept = '.pdf,.doc,.docx', onChange, fileName }) => {
+  const [fileLoading, setFileLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
   const handleButtonClick = () => {
-    // Trigger the hidden file input when the custom button is clicked
-    document.getElementById(id)?.click();
+    document.getElementById(id)?.click(); // Trigger hidden file input
+  };
+
+  const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0] || null;
+    const selectedFileName = file ? file.name : '';
+
+    if (file) {
+      const acceptedTypes = accept.split(',').map(type => type.trim());
+
+      if (!acceptedTypes.includes(file.type)) {
+        const fileExtension = selectedFileName.split('.').pop()?.toLowerCase();
+        const validExtensions = acceptedTypes.map(type => type.replace('.', '').toLowerCase());
+
+        if (!validExtensions.includes(fileExtension || '')) {
+          setError('Unsupported file type. Please upload a valid file.');
+          return;
+        }
+      }
+
+      setError(null);
+      setFileLoading(true);
+
+      // Simulate file loading process
+      setTimeout(() => {
+        setFileLoading(false);
+        onChange(event, selectedFileName); // Call parent's onChange handler
+      }, 1500); // Simulate a 1.5-second delay for the process
+    } else {
+      setError('No file selected.'); // Handle case where no file is selected
+    }
   };
 
   return (
     <Box
       mb={2}
       sx={{
-        border: '1px solid #ccc', // Gray border
-        borderRadius: '4px', // Rounded corners
-        padding: '8px', // Space between the content and the border
-        backgroundColor: 'white', // White background
-        boxShadow: (theme) => theme.shadows[2], 
+        border: '1px solid #ccc',
+        borderRadius: '4px',
+        padding: '8px',
+        backgroundColor: 'white',
+        boxShadow: (theme) => theme.shadows[2],
         '&:hover': {
-            color: '#036635', // Darker green on hover for emphasis
-          },
+          color: '#036635',
+        },
       }}
     >
       <InputLabel
         htmlFor={id}
         sx={{
-          color: '#000', // Black color for the label
-          fontWeight: 'bold', // Make the label bold
-          fontSize: '1rem', // Slightly larger font size
-          
+          color: '#000',
+          fontWeight: 'bold',
+          fontSize: '1rem',
         }}
       >
         {label}
       </InputLabel>
-      {/* Hidden file input */}
+
       <input
         id={id}
         type="file"
         accept={accept}
-        onChange={onChange}
-        style={{ display: 'none' }} // Hide the default file input
+        onChange={handleFileChange}
+        style={{ display: 'none' }} // Hide default input
       />
-      {/* Custom button to trigger the file input */}
+
       <Button
-        variant="outlined" // Changed to outlined for a cleaner look
+        variant="outlined"
         color="primary"
         size="small"
         onClick={handleButtonClick}
         sx={{
-          textTransform: 'none', // Prevents text from being uppercase
-          fontSize: '0.875rem', // Smaller font size
-          padding: '4px 12px', // Custom padding for a smaller button
-          marginTop: '8px', // Add margin for spacing
-          borderRadius: '4px', // Match border radius
-          borderColor: '#ccc', // Match border color
+          textTransform: 'none',
+          fontSize: '0.875rem',
+          padding: '4px 12px',
+          marginTop: '8px',
+          borderRadius: '4px',
+          borderColor: '#ccc',
           '&:hover': {
-            borderColor: '#036635', // Change border color on hover
+            borderColor: '#036635',
           },
         }}
       >
         Choose File
       </Button>
+
+      {fileLoading ? (
+        <Box sx={{ display: 'flex', alignItems: 'center', marginTop: '8px' }}>
+          <CircularProgress color="success" size={15} style={{ marginRight: '8px' }} />
+          <Typography variant="body2">Converting...</Typography>
+        </Box>
+      ) : (
+        <>
+          {error && (
+            <Typography variant="body2" sx={{ color: 'red', marginTop: '8px' }}>
+              {error}
+            </Typography>
+          )}
+          {fileName && (
+            <Typography variant="body2" sx={{ marginTop: '8px' }}>
+              Selected File: {fileName}
+            </Typography>
+          )}
+        </>
+      )}
     </Box>
   );
 };
